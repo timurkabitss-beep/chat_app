@@ -15,8 +15,8 @@ class User(Base):
     password = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
     role = Column(Enum(UserRole), default=UserRole.member, nullable=False)
-    # bio = Column(Text, default="")
-    # groups =
-    # messages =
-    # unread_messages =
+    bio = Column(Text, default="")
+    groups = Column("GroupMember", back_populates="user", nullable=False)
+    messages = Column(String(1000), ForeignKey("messages.id"), nullable=False)
+    unread_messages = Column(String(1000), ForeignKey("unread_messages.id"), nullable=False)
     # websocket =

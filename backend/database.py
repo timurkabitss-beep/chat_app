@@ -11,7 +11,15 @@ engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
 class Base(DeclarativeBase):
-    pass
+    def __repr__(self):
+        class_name = self.__class__.__name__
+
+        attrs =  [
+            f"{c.name}={getattr(self, c.name)}"
+            for c in self.__table__.columns
+        ]
+
+        return f"<{class_name}({','.join(attrs)})>"
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
