@@ -1,6 +1,6 @@
 from datetime import datetime
 from backend.database import Base
-from sqlalchemy import Column, String, Integer, ForeignKeyDateTime
+from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from enum import Enum
 
@@ -34,7 +34,7 @@ class Changes(Base):
     change_type = Column(Enum(ChangeType), nullable=False)
     sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     sender_name = Column(String)
-    message = relationship("Message", back_populates="history")
+    message = relationship("Messages", back_populates="history")
     editor = relationship("User")
     original_text = Column(String, nullable=False)
     new_text = Column(String, nullable=False)
