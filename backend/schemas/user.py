@@ -4,16 +4,17 @@ from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import Optional
 from backend.models.user import UserRole
 
-class User(BaseModel):
+class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     email: Optional[str] = None
     role: UserRole
-    bio: str | None = None
-    created_at: Optional[datetime] = None
-    full_mame: Optional[str] = None
+    created_at: datetime
+    full_name: Optional[str] = None
 
-class CreateUser(BaseModel):
+class UserCreate(BaseModel):
     username: str = Field(..., min_length=3, max_length=50, pattern=r"^[a-zA-Z0-9_-]+$")
     password: str = Field(..., min_length=8, description="Min 8 symbols")
     email: Optional[EmailStr] = None
