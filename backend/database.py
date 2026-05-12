@@ -2,12 +2,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase
 from typing import Annotated, AsyncGenerator
 from fastapi import Depends
-from app.config import settings
+from backend.settings import settings
 
-SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:pass@localhost:5432/chat_db"
-
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
-
+engine = create_async_engine(settings.DATABASE_URL,
+                             echo=settings.DEBUG,
+                             pool_size=10,
+                             max_overflow=20,
+                             pool_pre_ping=True
+                             )
 SessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
 class Base(DeclarativeBase):
@@ -22,7 +24,14 @@ class Base(DeclarativeBase):
         return f"<{class_name}({','.join(attrs)})>"
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with SessionLocal() as session:
+    session = SessionLocal()
+    try:
         yield session
+        await session.commmit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]

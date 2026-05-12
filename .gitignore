@@ -1,0 +1,50 @@
+# --- Секреты и конфигурация ---
+.env
+.env.local
+.env.production
+.env.backup
+*.env
+
+# --- Виртуальное окружение ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Python кэш и сборки ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- IDE и редакторы ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Тесты, линтеры, форматтеры ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# --- Базы данных и временные файлы ---
+*.db
+*.sqlite3
+*.dump
+tmp/
+temp/
+
+# --- Docker (локальные оверрайды) ---
+docker-compose.override.yml
