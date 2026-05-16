@@ -27,11 +27,11 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
     session = SessionLocal()
     try:
         yield session
-        await session.commmit()
+        await session.commit()
     except Exception:
-        session.rollback()
+        await session.rollback()
         raise
     finally:
-        session.close()
+        await session.close()
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]

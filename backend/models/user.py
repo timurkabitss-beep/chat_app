@@ -1,6 +1,7 @@
 from datetime import datetime
 from backend.database import Base
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, Boolean, func, Enum
+from sqlalchemy.orm import relationship
 from enum import Enum
 
 
@@ -15,8 +16,9 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
     role = Column(Enum(UserRole), default=UserRole.member, nullable=False)
+    full_name = Column(String(100), nullable=False)
     bio = Column(Text, default="")
-    created_at = Column(FateTime, server_default=func.now())
+    created_at = Column(DateTime, server_default=func.now())
     is_active = Column(Boolean, default=True)
 
     groups = relationship("GroupMember", back_populates="user", cascade="all, delete-orphan")

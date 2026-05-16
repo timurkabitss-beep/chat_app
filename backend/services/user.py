@@ -1,5 +1,4 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from sqlalchemy import func
 from backend.models.User import User
 

@@ -21,7 +21,7 @@ class Message(Base):
     edited_at = Column(DateTime, nullable=True)
 
     history = relationship("Changes", back_populates="message")
-    sender = relationship("Users", foreign_keys=[sender_id])
+    sender = relationship("Users", foreign_keys=[sender_id], back_populates="messages_sent")
     group = relationship("Groups", back_populates="messages")
     unread_by = relationship("UnreadMessage", back_populates="message", cascade="all, delete-orphan")
 
