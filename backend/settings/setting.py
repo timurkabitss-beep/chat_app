@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = Field(..., min_length=32)
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000022
 
     REDIS_URL: str = "redis://redis:6379"
     CACHE_TTL_SECONDS: int = 60
