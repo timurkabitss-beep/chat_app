@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from backend.models.User import User
@@ -55,3 +57,15 @@ async def get_users_list(db: AsyncSession, skip: int = 0, limit: int = 100) -> l
 
     users = result.scalars().all()
     return users
+
+async def delete_user(db: AsyncSession, user_id: int) -> User | None:
+    res = await db.execute(select(User).where(User.id==user_id))
+    usr = res.scalar_one_or_none()
+    if not usr or not usr.is_active:
+        return None
+
+    usr.is_active = False
+    usr.deleted_at = func.now()
+    await db.commit()
+    await db.refresh(usr)
+    return usr
