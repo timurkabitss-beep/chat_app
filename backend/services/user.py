@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from passlib.context import CryptContext
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import func
 from backend.models.User import User
@@ -7,6 +7,11 @@ from backend.models.User import User
 from backend import models
 from backend.schemas.user import UserCreate, UserResponse
 
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
 async def create_user(db: AsyncSession, data: UserCreate)-> models.User:
     hash_pwd = get_password_hash(data.password)
@@ -23,18 +28,14 @@ async def create_user(db: AsyncSession, data: UserCreate)-> models.User:
 async def update_user(db: AsyncSession, user_id: int, data: UserUpdate)->models.User | None:
     res = await db.execute(select(User).where(User.user_id==user_id))
     user = res.scalar_one_or_none()
-
     if not user:
         return None
-
     upd_data = data.model_dump(exclude_unset=True)
 
     if "password" in upd_data:
         upd_data["hashed_password"] = get_password_hash(upd_data.pop("password"))
-
     for field, value in upd_data.items():
         setattr(user, field, value)
-
     await db.commit()
     await db.refresh(user)
     return user
@@ -69,3 +70,14 @@ async def delete_user(db: AsyncSession, user_id: int) -> User | None:
     await db.commit()
     await db.refresh(usr)
     return usr
+
+async def authorize_user(db: AsyncSession, username: str, password: str) -> User | None:
+    res = await db.execute(select(User).where(func.lower(User.username == username.lower())))
+    user = res.scalar_one_or_none()
+    if not user or user.is_active:
+        return None
+
+    if not verify_password(password, user.hashed_password):
+        return None
+
+    return user
