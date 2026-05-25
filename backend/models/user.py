@@ -20,6 +20,7 @@ class User(Base):
     bio = Column(Text, default="")
     created_at = Column(DateTime, server_default=func.now())
     is_active = Column(Boolean, default=True)
+    deleted_at = Column(DateTime, nullable=True)
 
     groups = relationship("GroupMember", back_populates="user", cascade="all, delete-orphan")
     messages_sent = relationship("Message", back_populates="sender", foreign_keys="Message.sender_id")
