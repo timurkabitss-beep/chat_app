@@ -5,8 +5,8 @@ from datetime import datetime
 
 class MessageCreate(BaseModel):
     content: str = Field(..., min_length=1, max_length=3000)
-    group_id: Optional[int] | None = None
-    receiver_id: Optional[int] | None = None
+    group_id: Optional[int] = None
+    receiver_id: Optional[int]= None
 
 
 class MessageResponse(BaseModel):

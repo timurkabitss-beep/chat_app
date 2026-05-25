@@ -54,7 +54,7 @@ async def check_group_admin(db: AsyncSession, group_id: int, user_id: int) -> bo
 
 async def update_group(db: AsyncSession, group_id: int, data: GroupUpdate, user_id: int) -> Group | None:
     if not await check_group_admin(db, group_id, user_id):
-        raise PermissionDeniedError(detail="Once for admins")
+        raise PermissionDeniedError(detail="Only for admins")
 
     res = await db.execute(select(Group).where(Group.id == group_id))
     group = res.scalar_one_or_none()
@@ -72,7 +72,7 @@ async def update_group(db: AsyncSession, group_id: int, data: GroupUpdate, user_
 
 async def delete_group(db: AsyncSession, group_id: int, user_id: int) -> bool:
     if not await check_group_admin(db, group_id, user_id):
-        raise PermissionDeniedError(detail="Once for admins")
+        raise PermissionDeniedError(detail="Only for admins")
 
     res = await db.execute(select(Group).where(Group.id == group_id))
     group = res.scalar_one_or_none()
