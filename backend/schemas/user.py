@@ -20,3 +20,11 @@ class UserCreate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(None, max_length=100)
 
+class UserLogin(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50, description="Имя пользователя для входа")
+    password: str = Field(..., min_length=8, description="Пароль")
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

@@ -1,15 +1,13 @@
 from fastapi import FastAPI
-import json
+from backend.routers.auth import router as auth_router
 import uvicorn
 
-app = FastAPI()
-@app.get("/status")
-async def get_status():
-    return {"status": "ok"}
+app = FastAPI(
+    title="Chat Application API",
+    version="1.0.0"
+)
+app.include_router(auth_router)
 
-@app.get("/ping")
-async def ping():
-    return {"status": "pong"}
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Chat App API!"}
