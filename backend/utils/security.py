@@ -4,8 +4,11 @@ from jose import jwt, ExpiredSignatureError, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
-
-from .exceptions import TokenExpiredError, InvalidTokenError, InvalidCredentialsError
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from backend.models.user import User
+from backend.utils.exceptions import TokenExpiredError, InvalidTokenError, InvalidCredentialsError, UserNotFoundError
+from ..database import get_db, SessionDep
 
 SECRET_KEY = "SUPER_SECRET_CHAT_KEY_CHANGE_ME"
 ALGORITHM = "HS256"
@@ -22,7 +25,7 @@ def hash_password(password: str) -> str:
 
 def verify_password(plain_password: str, hashed_password: str) -> None:
     if not pwd_context.verify(plain_password, hashed_password):
-        raise InvalidTokenError("Invalid password")
+        raise InvalidCredentialsError()
 
 ##jwt
 
@@ -38,19 +41,26 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
 
 def decode_access_token(token: str) -> dict:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["H256"])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except ExpiredSignatureError:
-        raise TokenExpiredError("Token Expired")
+        raise TokenExpiredError()
     except JWTError:
-        raise InvalidTokenError("Invalid token")
+        raise InvalidTokenError()
 
 
 ##зависимость
-def get_current_user_id(token: str = Depends(oauth2_scheme)) -> int:
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
     payload = decode_access_token(token)
     user_id: str = payload.get("sub")
 
     if user_id is None:
-        raise InvalidTokenError("Invalid token")
-    return int(user_id)
+        raise InvalidTokenError()
+
+    query = await db.execute(select(User).filter(User.id == int(user_id)))
+    user = query.scalars().first()
+
+    if user is None:
+        raise UserNotFoundError()
+
+    return user

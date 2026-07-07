@@ -1,13 +1,10 @@
-from dataclasses import Field
-from enum import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings
 from functools import lru_cache
-
-from backend import settings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = Field(default="postgresql+asyncpg://postgres:pass@localhost:5432/chat_db",
-                              description="Database connection string")
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:pass@localhost:5432/chat_db"
 
     SECRET_KEY: str = Field(..., min_length=32)
     ALGORITHM: str = "HS256"
@@ -25,7 +22,7 @@ class Settings(BaseSettings):
     DEFAULT_PAGE_SIZE: int = 50
     MAX_PAGE_SIZE: int = 200
 
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000"]
 
 
     class Config:
@@ -33,8 +30,4 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-@lru_cache
-def get_settings():
-    return settings
-
-settings = get_settings()
+settings = Settings()

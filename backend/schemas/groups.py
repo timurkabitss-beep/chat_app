@@ -7,11 +7,20 @@ class GroupCreate(BaseModel):
     description: Optional[str] =Field(None, max_length=500)
     is_private: bool = False
 
+class GroupResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    description: Optional[str] = None
+    is_private: bool
+    created_at: datetime
+
 class GroupMembersResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     group_id: int
     name: str
-    members: List[str]
+    members: list[str]
 
 class GroupUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=1, max_length=100)

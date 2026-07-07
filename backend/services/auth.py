@@ -1,14 +1,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select  # Нужен для асинхронных запросов в SQLAlchemy
 
-from utils.security import hash_password, verify_password, create_access_token
-from utils.exceptions import (
+from backend.utils.security import hash_password, verify_password, create_access_token
+from backend.utils.exceptions import (
     UserAlreadyExistsError,
     InvalidCredentialsError,
     UserInactiveError
 )
-from schemas.user import UserCreate, UserLogin
-from models.user import User
+from backend.schemas.user import UserCreate, UserLogin
+from backend.models.user import User
 
 ###Асинхронная регистрация нового пользователя.
 async def register_user(db: AsyncSession, user_data: UserCreate) -> User:

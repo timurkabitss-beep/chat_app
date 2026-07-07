@@ -1,11 +1,11 @@
 from datetime import datetime
 from backend.database import Base
-from sqlalchemy import Column, String, Integer, DateTime, Text, ForeignKey, Boolean, func, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Text, Enum as SqlAlchemyEnum, func, Boolean
+
 from sqlalchemy.orm import relationship
-from enum import Enum
+import enum
 
-
-class UserRole(str, Enum):
+class UserRole(str, enum.Enum):
     admin = "admin"
     member = "member"
 
@@ -15,7 +15,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     hashed_password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
-    role = Column(Enum(UserRole), default=UserRole.member, nullable=False)
+    role = Column(SqlAlchemyEnum(UserRole), default=UserRole.member, nullable=False)
     full_name = Column(String(100), nullable=False)
     bio = Column(Text, default="")
     created_at = Column(DateTime, server_default=func.now())

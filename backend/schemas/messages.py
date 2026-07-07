@@ -17,3 +17,5 @@ class MessageResponse(BaseModel):
     sender_id: int
     sender_username: Optional[str] = None
     created_at: datetime
+    edited_at: Optional[datetime] = None
+    id_deleted: bool = False
