@@ -1,31 +1,28 @@
+from datetime import datetime, timezone
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from backend.models.messages import Message, Changes, ChangeType
-from backend.schemas.message import MessageCreate, MessageUpdate
+from backend.schemas.messages import MessageCreate, MessageUpdate
 from backend.utils.exceptions import PermissionDeniedError, ResourceNotFoundError
 
-async def create_message(db: AsyncSession, data: MessageCreate, sender_id: int) -> Message:
+
+async def create_message(db: AsyncSession, data: MessageCreate, sender_id: int, is_scheduled: bool = False) -> Message:
     new_msg = Message(
         content=data.content,
         sender_id=sender_id,
-        group_id=data.group_id
+        group_id=data.group_id,
+        receiver_id=data.receiver_id,
+        scheduled_at=data.scheduled_at if is_scheduled else None,
+        is_sent=not is_scheduled,
     )
 
-    ## Определяем тип чата и заполняем нужное поле
-    if data.group_id:
-        new_msg.group_id = data.group_id  ## Групповой чат
-    elif data.receiver_id:
-        new_msg.receiver_id = data.receiver_id  ## Личный диалог
-    else:
-        raise ValueError("You need to specify either the group_id or the receiver_id.")
-
-    ##Сохраняем
+    db.add(new_msg)
     await db.flush()
     await db.refresh(new_msg)
     return new_msg
 
 
-async def get_messages(db: AsyncSession, group_id: int, skip: int = 0, limit: int = 50) -> list[Message]:
+async def get_group_messages(db: AsyncSession, group_id: int, skip: int = 0, limit: int = 50) -> list[Message]:
     stmt = (
         select(Message)
         .where(Message.group_id == group_id)
@@ -34,7 +31,24 @@ async def get_messages(db: AsyncSession, group_id: int, skip: int = 0, limit: in
         .limit(limit)
     )
     res = await db.execute(stmt)
-    return res.scalars().all()
+    return list(res.scalars().all())
+
+
+async def get_direct_messages(
+    db: AsyncSession, user_id: int, other_user_id: int, skip: int = 0, limit: int = 50
+) -> list[Message]:
+    stmt = (
+        select(Message)
+        .where(
+            ((Message.sender_id == user_id) & (Message.receiver_id == other_user_id))
+            | ((Message.sender_id == other_user_id) & (Message.receiver_id == user_id))
+        )
+        .order_by(Message.created_at.asc())
+        .offset(skip)
+        .limit(limit)
+    )
+    res = await db.execute(stmt)
+    return list(res.scalars().all())
 
 
 async def update_message(db: AsyncSession, message_id: int, data: MessageUpdate, user_id: int) -> Message:
@@ -51,11 +65,11 @@ async def update_message(db: AsyncSession, message_id: int, data: MessageUpdate,
         change_type=ChangeType.Edit,
         sender_id=user_id,
         original_text=msg.content,
-        new_text=new_content
+        new_text=data.content,
     )
     db.add(change_log)
 
-    msg.content = new_content
+    msg.content = data.content
     msg.edited_at = datetime.now(timezone.utc)
 
     await db.flush()
@@ -69,12 +83,15 @@ async def delete_message(db: AsyncSession, message_id: int, user_id: int) -> boo
     if not msg:
         raise ResourceNotFoundError(resource_name="Message")
 
+    if msg.sender_id != user_id:
+        raise PermissionDeniedError(detail="Only the author can delete the message.")
+
     change_log = Changes(
         message_id=msg.id,
         change_type=ChangeType.Delete,
         sender_id=user_id,
         original_text=msg.content,
-        new_text="[MESSAGE DELETED]"
+        new_text="[MESSAGE DELETED]",
     )
     db.add(change_log)
 

@@ -48,3 +48,4 @@ temp/
 
 # --- Docker (локальные оверрайды) ---
 docker-compose.override.yml
+.env.docker

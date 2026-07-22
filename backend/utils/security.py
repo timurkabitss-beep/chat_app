@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union
+from typing import Union
 from jose import jwt, ExpiredSignatureError, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends
@@ -8,40 +8,37 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from backend.models.user import User
 from backend.utils.exceptions import TokenExpiredError, InvalidTokenError, InvalidCredentialsError, UserNotFoundError
-from ..database import get_db, SessionDep
-
-SECRET_KEY = "SUPER_SECRET_CHAT_KEY_CHANGE_ME"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+from backend.database import get_db
+from backend.settings.settings import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# Указываем эндпоинт, где пользователь будет получать токен (например, /api/auth/login)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-##passwords
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
+
 
 def verify_password(plain_password: str, hashed_password: str) -> None:
     if not pwd_context.verify(plain_password, hashed_password):
         raise InvalidCredentialsError()
 
-##jwt
 
 def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None) -> str:
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
 
 def decode_access_token(token: str) -> dict:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except ExpiredSignatureError:
         raise TokenExpiredError()
@@ -49,8 +46,10 @@ def decode_access_token(token: str) -> dict:
         raise InvalidTokenError()
 
 
-##зависимость
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)) -> User:
+async def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
+) -> User:
     payload = decode_access_token(token)
     user_id: str = payload.get("sub")
 
